@@ -219,11 +219,6 @@ if CLIENT then
 
                         size = size * finalDistortion
 
-
-
-                        print("Calculated size:", size)
-
-
                         -- Применение эффекта
                         if effect_type == "square" then
                             draw.RoundedBox(0, data2D.x - size, data2D.y - size, size * 2, size * 2, Color(0, 0, 0))
