@@ -75,7 +75,7 @@ if CLIENT then
             })
 
             CPanel:AddControl("Label", {
-              Text = "This addon is a modification of the original add-on Censored Faces of the Players from RG Studio. In this version, the method of handling censorship was changed, allowing it to be adapted for use on the faces of non-player characters (NPCs). Version 1.4B"
+              Text = "This addon is a modification of the original add-on Censored Faces of the Players from RG Studio. In this version, the method of handling censorship was changed, allowing it to be adapted for use on the faces of non-player characters (NPCs). Version 1.4C"
             })
 
         end
@@ -201,6 +201,28 @@ if CLIENT then
                         minxy.y = math.min(mins_toscreen.y, maxs_toscreen.y)
                         local xdiff, ydiff = math.abs(maxxy.x - minxy.x), math.abs(maxxy.y - minxy.y)
                         local size = math.max(xdiff, ydiff) * 1 / entity:EyePos():Distance(LocalPlayer():EyePos()) * (ScrH() / 8) * blur_size
+
+                        local centerX, centerY = ScrW() / 2, ScrH() / 2
+                        local dx = data2D.x - centerX
+                        local dy = data2D.y - centerY
+                        local distanceFromCenter = math.sqrt(dx * dx + dy * dy)
+                        local maxDistance = math.sqrt(centerX * centerX + centerY * centerY)
+                        local distortionFactorCenter = 1 + (distanceFromCenter / maxDistance) * 1  -- настраиваемый множитель
+
+                        local toObject = (entity:EyePos() - LocalPlayer():EyePos()):GetNormalized()
+                        local forward = EyeAngles():Forward()
+                        local angleFactor = math.Clamp(forward:Dot(toObject), 0, 1)
+                        local distortionFactorAngle = 1 + (1 - angleFactor) * 1  -- настраиваемый множитель
+
+                        -- Итоговый множитель можно вычислить как произведение или комбинированную функцию:
+                        local finalDistortion = distortionFactorCenter * distortionFactorAngle
+
+                        size = size * finalDistortion
+
+
+
+                        print("Calculated size:", size)
+
 
                         -- Применение эффекта
                         if effect_type == "square" then
