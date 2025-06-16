@@ -14,6 +14,47 @@ Full support for NPCs and ragdolls, as well as partial support for players. The 
 - Ability to change the censorship size  
 - Developer features
 
+### List of Commands
+
+1. **`pp_censor_faces`** *(default: 0)*
+   Enables or disables the main face censorship effect for players and NPCs.
+   **0** — disabled, **1** — enabled.
+
+2. **`pp_censor_faces_size`** *(default: 64)*
+   Size of the censor area on the face. Used to scale the effect (e.g., mosaic size).
+
+3. **`pp_censor_faces_effect`** *(default: "mosaic")*
+   Selects the visual effect used for censorship. Available options:
+
+   * `"mosaic"` — pixelation effect;
+   * `"square"` — black square;
+   * `"white Square"` — white square;
+   * `"glitch"` — glitch effect.
+
+4. **`pp_censor_regdoll_blur`** *(default: 0)*
+   Enables face blur on **ragdolls** (dead player/NPC bodies).
+
+5. **`pp_blur_enabled`** *(default: 0)*
+   Enables or disables the **blur size slider**.
+   If disabled, `pp_censor_faces_blur_size` is ignored.
+
+6. **`pp_censor_faces_blur_size`** *(default: 5)*
+   Intensity of the blur effect, if selected.
+   Range: **0** to **10**.
+
+7. **`pp_censor_faces_allied_npcs`** *(default: 0)*
+   NPC filter: if enabled, censorship applies **only to allied NPCs**.
+
+8. **`pp_censor_players`** *(default: 1)*
+   Enables face censorship for **players**.
+
+9. **`pp_censor_npc`** *(default: 1)*
+   Enables face censorship for **NPCs (non-player characters)**.
+
+10. **`pp_new_size_handler`** *(default: 1)*
+    Enables the **new logic** for calculating censor area size.
+    Designed for more accurate positioning and scaling.
+
 ### What are the plans for the future?
 Currently, I planned to release several updates, including bug fixes and functionality improvements. I also plan to redo the addon demonstration video, and in the future, I will update this section.
 
