@@ -56,7 +56,9 @@ Full support for NPCs and ragdolls, as well as partial support for players. The 
     Designed for more accurate positioning and scaling.
 
 ### What are the plans for the future?
-Currently, I planned to release several updates, including bug fixes and functionality improvements. I also plan to redo the addon demonstration video, and in the future, I will update this section.
+Hi everyone! I'm excited to announce that I'm working on a new version of the addon — version 2.1. This update will include a few small but useful improvements. One of the key new features is the ability to censor only faces, without affecting the back of the head.
+This feature will be available to both regular users and developers through a new option in the DrawCensorEffect function. 
+I also in the future, I will update this section.
 
 ---
 ### Links
