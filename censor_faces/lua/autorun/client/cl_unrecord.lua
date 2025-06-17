@@ -11,6 +11,7 @@ if CLIENT then
     local censor_players_enabled = CreateClientConVar("pp_censor_players", "1", true, false)  -- Для теста включаем цензуру игроков
     local censor_npc_enabled = CreateClientConVar("pp_censor_npc", "1", true, false)  -- Работа с NPC
     local new_size_handler = CreateClientConVar("pp_new_size_handler", "1", true, false)  -- Новый обработчик размеров цензуры
+    local censor_faces_only = CreateClientConVar("pp_censor_faces_only", "0", true, false)  -- Новый переключатель для цензуры только лиц
 
     list.Set("PostProcess", "Censor Faces", {
         icon = "materials/gui/postprocess/censor_faces.jpg",
@@ -80,6 +81,11 @@ if CLIENT then
                 Label = "Filter Allied NPCs Only", 
                 Command = "pp_censor_faces_allied_npcs" 
     
+            })
+
+            CPanel:AddControl("CheckBox", { 
+                Label = "Censorship of faces only", 
+                Command = "pp_censor_faces_only" 
             })
 
             
@@ -183,7 +189,7 @@ if CLIENT then
     end
 
     -- Определение функции DrawCensorEffect перед её использованием
-    local function DrawCensorEffect(entity, is_player, is_local_player, effect_type, censor_size, blur_size, rt_tex, use_new_size_handler)
+    local function DrawCensorEffect(entity, is_player, is_local_player, effect_type, censor_size, blur_size, rt_tex, use_new_size_handler, censor_faces_only)
         -- Если текстура не передана, используем нашу текстуру по умолчанию
         local useTexture = rt_tex or tex
         cam.Start2D()
@@ -220,14 +226,90 @@ if CLIENT then
         end
         
         -- Трассировка для проверки, что нет объектов между камерой и головой
+        -- На эту улучшенную версию:
+        -- Трассировка для проверки, что нет объектов между камерой и головой
         if not is_local_player then
+            local ply = LocalPlayer()
+            
+            -- Проверяем, находится ли игрок в транспорте
+            local playerVehicle = ply:GetVehicle()
+            local isInVehicle = IsValid(playerVehicle)
+            
             local tr = util.TraceLine({
-                start = LocalPlayer():EyePos(),
+                start = ply:EyePos(),
                 endpos = pos,
-                filter = function(ent) return ent ~= entity and ent ~= LocalPlayer() end
+                filter = function(ent) 
+                    -- Базовые исключения
+                    if ent == entity or ent == ply then
+                        return false
+                    end
+                    
+                    -- Если в транспорте, исключаем сам транспорт
+                    if isInVehicle and ent == playerVehicle then
+                        return false
+                    end
+                    
+                    -- Исключаем стекла и прозрачные материалы
+                    local material = ent:GetMaterial()
+                    if material then
+                        local matLower = material:lower()
+                        if string.find(matLower, "glass") or 
+                        string.find(matLower, "window") or 
+                        string.find(matLower, "transparent") then
+                            return false
+                        end
+                    end
+                    
+                    -- Можно добавить проверку на конкретные классы транспорта
+                    local class = ent:GetClass()
+                    if string.find(class, "prop_vehicle") or 
+                    string.find(class, "vehicle") then
+                        -- Если это транспорт и игрок в нем, не учитываем
+                        if isInVehicle and ent == playerVehicle then
+                            return false
+                        end
+                    end
+                    
+                    return true
+                end
             })
                                 
             if tr.Hit then
+                cam.End2D()
+                return
+            end
+        end
+
+        -- НОВАЯ ФУНКЦИОНАЛЬНОСТЬ: Проверка видимости лица
+        if censor_faces_only and censor_faces_only == 1 then
+            local localPlayerPos = LocalPlayer():EyePos()
+            local localPlayerAngles = LocalPlayer():EyeAngles()
+            local localPlayerForward = localPlayerAngles:Forward()
+            
+            -- Получаем направление взгляда сущности (куда смотрит лицо)
+            local entityFaceDirection
+            if is_player then
+                entityFaceDirection = entity:EyeAngles():Forward()
+            else
+                -- Для NPC используем направление attachment'а глаз или головы
+                if angpos and angpos.Ang then
+                    entityFaceDirection = angpos.Ang:Forward()
+                else
+                    -- Запасной вариант - используем направление самой сущности
+                    entityFaceDirection = entity:GetAngles():Forward()
+                end
+            end
+            
+            -- Вычисляем вектор от игрока к сущности
+            local toEntity = (pos - localPlayerPos):GetNormalized()
+            
+            -- Проверяем угол между направлением лица сущности и направлением от игрока к сущности
+            -- Если dot product отрицательный, значит лицо повернуто к нам
+            -- Если положительный, значит мы видим затылок
+            local faceDot = entityFaceDirection:Dot(toEntity)
+            
+            -- Если dot product > 0.3, значит мы видим больше затылок чем лицо
+            if faceDot > 0.3 then
                 cam.End2D()
                 return
             end
@@ -311,7 +393,26 @@ if CLIENT then
             if size_handler then
                 local boxSize = maxs - mins
                 local actualSize = math.max(boxSize.x, boxSize.y, boxSize.z)
-                size = actualSize * (1 / distance) * (ScrH() / 8) * blur_size * 2
+
+                -- Получаем текущий FOV
+                local currentFOV = LocalPlayer():GetFOV()
+                local defaultFOV = 100 -- стандартный FOV в Source Engine (Начальное значение для работы currentFOV)
+
+                -- Коэффициент для компенсации FOV
+                local fovScale = defaultFOV / currentFOV
+
+                -- Получаем разрешение экрана
+                local scrW, scrH = ScrW(), ScrH()
+
+                -- Базовое соотношение сторон (обычно 16:9 или 4:3)
+                local baseAspectRatio = 16/9
+                local currentAspectRatio = scrW / scrH
+
+                -- Коэффициент для компенсации соотношения сторон
+                local aspectScale = currentAspectRatio / baseAspectRatio
+
+                -- Применяем все коэффициенты
+                size = actualSize * (1 / distance) * (scrH / 8) * blur_size * 2 * fovScale * aspectScale
             else
                 local xdiff, ydiff = math.abs(maxxy.x - minxy.x), math.abs(maxxy.y - minxy.y)
                 size = math.max(xdiff, ydiff) * (1 / distance) * (ScrH() / 8) * blur_size / 2
@@ -418,6 +519,9 @@ if CLIENT then
         local should_censor_npc = censor_npc_enabled:GetBool()
         local should_censor_players = censor_players_enabled:GetBool()
         local use_new_size_handler = new_size_handler:GetBool()
+        
+        -- НОВАЯ ПЕРЕМЕННАЯ: Получаем значение censor_faces_only
+        local censor_faces_only = censor_faces_only:GetInt() 
        
         -- Копируем рендер-таргет один раз для всех эффектов
         render.CopyRenderTargetToTexture(tex)
@@ -453,7 +557,7 @@ if CLIENT then
                 continue
             end
            
-            -- Теперь вызываем функцию для цензуры
+            -- Теперь вызываем функцию для цензуры с новым параметром
             DrawCensorEffect(
                 entity,
                 is_player,
@@ -462,8 +566,26 @@ if CLIENT then
                 censor_size:GetFloat(),
                 blur_size,
                 tex,
-                use_new_size_handler
+                use_new_size_handler,
+                censor_faces_only  -- НОВЫЙ ПАРАМЕТР
             )
         end
     end)
 end
+
+/*
+
+Censor Faces - 2.1 Release Build
+
+--------------
+diopop1 - 2025
+Build 2.1 | 2025.06.17 
+
+*DrawCensorEffect UPDATE (new parameter censor_faces_only)
+*Added new ConVar pp_censor_faces_only (0 - disabled, 1 - enabled)
+*Fixed a problem with tracing in transport that caused the addon not to work in transport
+*Fixed an issue that caused the New Size Handler to not work correctly with the ability to change the fov in the game, which led to incorrect calculations when using zoom (May not be fixed for players)
+--------------
+
+
+*/
