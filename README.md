@@ -1,5 +1,5 @@
 # Censor Faces
-*#Global_2.0*
+*#Update_2.1*
 
 ### What is this for?
 
@@ -55,14 +55,18 @@ Full support for NPCs and ragdolls, as well as partial support for players. The 
     Enables the **new logic** for calculating censor area size.
     Designed for more accurate positioning and scaling.
 
+11. **pp\_censor\_faces\_only** (default: `0`)
+   When enabled, only face regions will be censored.
+
+   * `0` – disabled
+   * `1` – censor faces only
+
 ### What are the plans for the future?
-Hi everyone! I'm excited to announce that I'm working on a new version of the addon — version 2.1. This update will include a few small but useful improvements. One of the key new features is the ability to censor only faces, without affecting the back of the head.
-This feature will be available to both regular users and developers through a new option in the DrawCensorEffect function. 
 I also in the future, I will update this section.
 
 ---
 ### Links
-> *  [censor_faces.zip](https://github.com/user-attachments/files/19284958/censor_faces.zip)
+> *  [censor_faces.zip](https://github.com/user-attachments/files/20777328/censor_faces.zip)
 > *  [GitHub](https://github.com/diopop1/Censor-faces-for-NPC-Garry-s-Mod)
 > *  [YouTube](www.youtube.com/@diopop1)
 > *  [Steam](https://steamcommunity.com/id/diopop/)
