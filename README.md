@@ -69,5 +69,5 @@ I also in the future, I will update this section.
 > *  [censor_faces.zip](https://github.com/user-attachments/files/20777328/censor_faces.zip)
 > *  [GitHub](https://github.com/diopop1/Censor-faces-for-NPC-Garry-s-Mod)
 > *  [YouTube](www.youtube.com/@diopop1)
-> *  [Steam](https://steamcommunity.com/id/diopop/)
+> *  [Steam](https://steamcommunity.com/id/diopop1/)
 
