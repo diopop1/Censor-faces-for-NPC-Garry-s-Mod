@@ -2,7 +2,7 @@
 
 *#Update_2.1*
 
-*Preview branch* — here the latest unstable updates will be published.
+**Preview branch** — here the latest unstable updates will be published.
 
 ---
 ### Links
